@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="both">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Ramp Challenge: Does the Balloon Help?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --paper: #f5f7fa;
+  --surface: #ffffff;
+  --ink: #16233b;
+  --muted: #55627a;
+  --line: #c9d2e0;
+  --grid: #e3e9f2;
+  --accent: #1d4ed8;
+  --accent-ink: #ffffff;
+  --lane-a: #5b6f93;
+  --lane-b: #f0a500;
+  --lane-c: #17907d;
+  --focus: #1d4ed8;
+  --ok: #17775f;
+  --warn: #b4410f;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", Verdana, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1626; --surface: #172138; --ink: #e8edf7; --muted: #9eabc4;
+    --line: #34415c; --grid: #1e2a44; --accent: #7aa2ff; --accent-ink: #0f1626;
+    --lane-a: #8da2c8; --lane-b: #ffc233; --lane-c: #3fcfb4; --focus: #7aa2ff;
+    --ok: #55d1ad; --warn: #ff9b6a;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f1626; --surface: #172138; --ink: #e8edf7; --muted: #9eabc4;
+  --line: #34415c; --grid: #1e2a44; --accent: #7aa2ff; --accent-ink: #0f1626;
+  --lane-a: #8da2c8; --lane-b: #ffc233; --lane-c: #3fcfb4; --focus: #7aa2ff;
+  --ok: #55d1ad; --warn: #ff9b6a;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: var(--body); font-size: 17px; line-height: 1.55;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+main { max-width: 860px; margin: 0 auto; padding: 20px 18px 64px; }
+
+/* language switching */
+html[data-lang="en"] .es { display: none !important; }
+html[data-lang="es"] .en { display: none !important; }
+.es { color: var(--muted); font-style: italic; }
+html[data-lang="es"] .es { color: inherit; font-style: normal; }
+.pair .es { display: block; }
+html[data-lang="both"] span.es:not(.block) { margin-left: .35em; }
+
+/* toolbar */
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.seg { display: inline-flex; border: 2px solid var(--ink); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.seg button { font: inherit; font-weight: 700; font-size: 15px; padding: 8px 14px; border: 0; background: transparent; color: var(--ink); cursor: pointer; min-height: 44px; }
+.seg button + button { border-left: 2px solid var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { font: inherit; font-weight: 700; font-size: 15px; min-height: 44px; padding: 8px 16px; border-radius: 10px; border: 2px solid var(--ink); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.danger[data-armed="true"] { background: var(--warn); border-color: var(--warn); color: #fff; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* title */
+.title { margin: 8px 0 4px; }
+.title h1 { font-family: var(--display); font-weight: 700; font-size: clamp(38px, 8vw, 64px); line-height: 1; letter-spacing: .01em; margin: 0; }
+.title .sub { font-family: var(--display); font-weight: 600; font-size: clamp(22px, 4.5vw, 30px); color: var(--muted); margin: 6px 0 0; }
+html[data-lang="es"] .title .sub { display: none; }
+.finish { height: 14px; margin: 16px 0 6px; border-radius: 2px;
+  background: repeating-conic-gradient(var(--ink) 0 25%, var(--surface) 0 50%) 0 0 / 14px 14px; border: 2px solid var(--ink); }
+
+.idrow { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin: 14px 0 6px; }
+@media (max-width: 560px) { .idrow { grid-template-columns: 1fr; } }
+.field { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: 15px; }
+.field input, .field textarea, .cell-input {
+  font: inherit; font-weight: 400; color: var(--ink); background: var(--surface);
+  border: 2px solid var(--line); border-radius: 8px; padding: 9px 11px; width: 100%; min-height: 44px;
+}
+textarea { resize: vertical; min-height: 84px; line-height: 1.45; }
+input:hover, textarea:hover { border-color: var(--muted); }
+.hint { font-size: 14px; color: var(--muted); margin: 6px 0 0; }
+
+/* sections */
+section { margin-top: 38px; }
+h2 { font-family: var(--display); font-weight: 700; font-size: 32px; line-height: 1.05; margin: 0 0 4px; padding-bottom: 6px; border-bottom: 3px solid var(--ink); }
+h2 .es { display: block; font-size: 22px; font-weight: 600; margin: 2px 0 0; font-style: normal; }
+html[data-lang="both"] h2 span.es:not(.block) { margin-left: 0; }
+p { margin: 10px 0; }
+.question { background: var(--surface); border: 2px solid var(--ink); border-radius: 10px; padding: 12px 16px; margin-top: 14px; font-weight: 700; }
+.question .es { font-weight: 400; display: block; }
+
+dl.words { margin: 12px 0 0; display: grid; gap: 8px; }
+dl.words div { background: var(--surface); border-left: 6px solid var(--lane-b); padding: 8px 14px; border-radius: 0 8px 8px 0; }
+dl.words dt { font-weight: 700; display: inline; }
+dl.words dd { display: inline; margin: 0; }
+
+/* tables */
+.scroll { overflow-x: auto; margin-top: 12px; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; background: var(--surface); }
+th, td { border: 2px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: middle; }
+thead th { background: var(--grid); font-size: 15px; line-height: 1.25; }
+thead th .es { display: block; font-weight: 400; }
+tbody th { font-weight: 700; }
+tbody th .es { display: block; font-weight: 400; font-size: 15px; }
+td.num { text-align: center; }
+td.num input { text-align: center; padding: 8px 4px; }
+td.avg { text-align: center; font-weight: 700; font-size: 20px; background: var(--grid); font-variant-numeric: tabular-nums; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 8px; vertical-align: -1px; }
+.units { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; font-weight: 700; }
+.units .seg button { min-width: 56px; }
+
+/* steps */
+ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 12px 0 0; display: grid; gap: 10px; }
+ol.steps li { counter-increment: s; }
+ol.steps label { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; background: var(--surface); border: 2px solid var(--line); border-radius: 10px; padding: 12px 14px; cursor: pointer; }
+ol.steps input { width: 26px; height: 26px; margin: 2px 0 0; accent-color: var(--accent); }
+ol.steps .t::before { content: counter(s) ".  "; font-weight: 700; }
+ol.steps label:has(input:checked) { border-color: var(--ok); }
+ol.steps label:has(input:checked) .t { color: var(--muted); }
+.tip { border-left: 6px solid var(--lane-c); background: var(--surface); padding: 10px 14px; border-radius: 0 8px 8px 0; margin-top: 12px; }
+
+/* chart: three lanes */
+.track { margin-top: 14px; display: grid; gap: 12px; }
+.lane { display: grid; grid-template-columns: minmax(96px, 150px) 1fr; gap: 12px; align-items: center; }
+.lane .name { font-weight: 700; font-size: 15px; line-height: 1.25; }
+.lane .name .es { display: block; font-weight: 400; }
+.road { position: relative; height: 44px; background: var(--surface); border: 2px solid var(--line); border-radius: 8px; overflow: hidden; }
+.road::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 3px dashed var(--line); transform: translateY(-50%); opacity: .8; }
+.bar { position: absolute; left: 0; top: 0; bottom: 0; width: 0; z-index: 1; transition: width .5s ease; border-radius: 0 6px 6px 0; }
+.bar.a { background: var(--lane-a); } .bar.b { background: var(--lane-b); } .bar.c { background: var(--lane-c); }
+.val { position: absolute; z-index: 2; top: 50%; transform: translateY(-50%); font-weight: 700; font-variant-numeric: tabular-nums; background: var(--surface); padding: 0 8px; border-radius: 6px; border: 2px solid var(--ink); font-size: 15px; transition: left .5s ease; white-space: nowrap; }
+.lane.empty .road { opacity: .55; }
+.result { margin-top: 16px; display: grid; gap: 8px; }
+.result p { margin: 0; background: var(--surface); border: 2px solid var(--ink); border-radius: 10px; padding: 10px 14px; font-weight: 700; }
+.result p .es { display: block; font-weight: 400; }
+.result p.pending { border-color: var(--line); color: var(--muted); font-weight: 400; }
+@media (prefers-reduced-motion: reduce) { .bar, .val { transition: none; } }
+
+.q { margin-top: 18px; }
+.q > label { font-weight: 700; display: block; margin-bottom: 6px; }
+.q > label .es { display: block; font-weight: 400; }
+.q label .qn { color: var(--accent); margin-right: 6px; }
+
+.roles { min-width: 520px; }
+.savenote { margin-top: 36px; font-size: 14px; color: var(--muted); border-top: 2px solid var(--line); padding-top: 12px; }
+
+@media print {
+  html { --paper: #fff; }
+  body { background: #fff; background-image: none; font-size: 12pt; }
+  .toolbar, .savenote { display: none !important; }
+  main { padding: 0; max-width: none; }
+  section { break-inside: avoid; }
+  .bar, .val { transition: none; }
+  .scroll { overflow: visible; }
+  table { min-width: 0; }
+}
+</style>
+</head>
+<body>
+<main>
+
+<div class="toolbar">
+  <div class="seg" role="group" aria-label="Language / Idioma">
+    <button type="button" data-set-lang="both" aria-pressed="true">English + Español</button>
+    <button type="button" data-set-lang="en" aria-pressed="false">English</button>
+    <button type="button" data-set-lang="es" aria-pressed="false">Español</button>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn primary" id="printBtn"><span class="en">Print or save as PDF</span><span class="es">Imprimir o guardar PDF</span></button>
+    <button type="button" class="btn danger" id="resetBtn" data-armed="false"><span class="en">Start over</span><span class="es">Empezar de nuevo</span></button>
+  </div>
+</div>
+
+<header class="title">
+  <h1>The Ramp Challenge: Does the Balloon Help?</h1>
+  <p class="sub es" style="font-style:normal">El Desafío de la Rampa: ¿Ayuda el globo?</p>
+  <div class="finish" aria-hidden="true"></div>
+</header>
+
+<div class="idrow">
+  <label class="field"><span><span class="en">Team name</span><span class="es">Nombre del equipo</span></span>
+    <input type="text" data-key="team" autocomplete="off"></label>
+  <label class="field"><span><span class="en">Date</span><span class="es">Fecha</span></span>
+    <input type="text" data-key="date" autocomplete="off" placeholder="__ / __ / __"></label>
+</div>
+<p class="hint"><span class="en">Write in English or Spanish, whichever is easiest for you.</span><span class="es">Escribe en inglés o en español, como te sea más fácil.</span></p>
+
+<section>
+  <h2><span class="en">Our mission</span><span class="es">Nuestra misión</span></h2>
+  <p class="pair"><span class="en">The balloon alone was not strong enough to push our racer on flat ground. Engineers test an idea to see what happens. Today we find out how much the balloon adds when the racer rolls down a ramp.</span>
+  <span class="es">El globo solo no fue lo bastante fuerte para empujar nuestro auto en el suelo plano. Los ingenieros prueban una idea para ver qué pasa. Hoy descubrimos cuánto ayuda el globo cuando el auto baja por una rampa.</span></p>
+  <div class="question pair"><span class="en">How much farther does the racer go with the balloon?</span><span class="es">¿Cuánto más lejos llega el auto con el globo?</span></div>
+
+  <dl class="words">
+    <div><dt><span class="en">Control:</span><span class="es">Control:</span></dt> <dd><span class="en">the test with nothing extra added (ramp only).</span><span class="es">la prueba sin nada extra (solo rampa).</span></dd></div>
+    <div><dt><span class="en">Variable:</span><span class="es">Variable:</span></dt> <dd><span class="en">the one thing we change (the balloon).</span><span class="es">lo único que cambiamos (el globo).</span></dd></div>
+    <div><dt><span class="en">Trial:</span><span class="es">Prueba:</span></dt> <dd><span class="en">one run of the test.</span><span class="es">una vez que hacemos el experimento.</span></dd></div>
+    <div><dt><span class="en">Average:</span><span class="es">Promedio:</span></dt> <dd><span class="en">add all the trials, then divide by how many trials you did.</span><span class="es">suma todas las pruebas y divide entre cuántas pruebas hiciste.</span></dd></div>
+  </dl>
+</section>
+
+<section>
+  <h2><span class="en">Team roles</span><span class="es">Roles del equipo</span></h2>
+  <p class="pair"><span class="en">Type a name for each job. Switch jobs between the two tests so everyone gets a turn.</span>
+  <span class="es">Escribe un nombre para cada trabajo. Cambien de trabajo entre las dos pruebas para que todos participen.</span></p>
+  <div class="scroll">
+  <table class="roles">
+    <thead><tr>
+      <th scope="col"><span class="en">Job</span><span class="es">Trabajo</span></th>
+      <th scope="col"><span class="en">Test 1: ramp only</span><span class="es">Prueba 1: solo rampa</span></th>
+      <th scope="col"><span class="en">Test 2: ramp + balloon</span><span class="es">Prueba 2: rampa + globo</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><th scope="row"><span class="en">Builder: sets up the car</span><span class="es">Constructor: prepara el auto</span></th>
+        <td><input class="cell-input" type="text" data-key="role_builder_1" aria-label="Builder, test 1"></td><td><input class="cell-input" type="text" data-key="role_builder_2" aria-label="Builder, test 2"></td></tr>
+      <tr><th scope="row"><span class="en">Releaser: lets go, never pushes</span><span class="es">Lanzador: suelta, nunca empuja</span></th>
+        <td><input class="cell-input" type="text" data-key="role_release_1" aria-label="Releaser, test 1"></td><td><input class="cell-input" type="text" data-key="role_release_2" aria-label="Releaser, test 2"></td></tr>
+      <tr><th scope="row"><span class="en">Measurer: measures the distance</span><span class="es">Medidor: mide la distancia</span></th>
+        <td><input class="cell-input" type="text" data-key="role_measure_1" aria-label="Measurer, test 1"></td><td><input class="cell-input" type="text" data-key="role_measure_2" aria-label="Measurer, test 2"></td></tr>
+      <tr><th scope="row"><span class="en">Recorder: writes the results</span><span class="es">Anotador: escribe los resultados</span></th>
+        <td><input class="cell-input" type="text" data-key="role_record_1" aria-label="Recorder, test 1"></td><td><input class="cell-input" type="text" data-key="role_record_2" aria-label="Recorder, test 2"></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2><span class="en">Steps</span><span class="es">Pasos</span></h2>
+  <p class="hint"><span class="en">Tap each step when your team finishes it.</span><span class="es">Toca cada paso cuando tu equipo lo termine.</span></p>
+  <ol class="steps">
+    <li><label><input type="checkbox" data-key="step1"><span class="t"><span class="en">Set up the ramp at the marked height. Use the same ramp, car, and floor every time.</span><span class="es">Coloquen la rampa a la altura marcada. Usen la misma rampa, auto y suelo todas las veces.</span></span></label></li>
+    <li><label><input type="checkbox" data-key="step2"><span class="t"><span class="en">Tape a release line at the top of the ramp. Always start the car at the same line.</span><span class="es">Pongan una línea de salida arriba de la rampa. Siempre empiecen el auto en la misma línea.</span></span></label></li>
+    <li><label><input type="checkbox" data-key="step3"><span class="t"><span class="en">Control: let the car roll down with no balloon. Measure from the bottom of the ramp to the front wheels. Do 3 trials.</span><span class="es">Control: dejen que el auto baje sin globo. Midan desde el final de la rampa hasta las ruedas delanteras. Hagan 3 pruebas.</span></span></label></li>
+    <li><label><input type="checkbox" data-key="step4"><span class="t"><span class="en">Test: attach the balloon and inflate it the same amount each time. Point the nozzle straight back, then release. Do 3 trials.</span><span class="es">Prueba: pongan el globo y ínflenlo igual cada vez. Apunten la boquilla hacia atrás y suelten el auto. Hagan 3 pruebas.</span></span></label></li>
+    <li><label><input type="checkbox" data-key="step5"><span class="t"><span class="en">Type every distance into the table below. The averages and the graph fill in for you.</span><span class="es">Escriban cada distancia en la tabla de abajo. Los promedios y la gráfica se llenan solos.</span></span></label></li>
+  </ol>
+  <p class="tip pair"><span class="en"><strong>Tip:</strong> release the car, do not push it. Change only the balloon.</span><span class="es"><strong>Consejo:</strong> suelten el auto, no lo empujen. Cambien solo el globo.</span></p>
+</section>
+
+<section>
+  <h2><span class="en">Our data</span><span class="es">Nuestros datos</span></h2>
+  <div class="units">
+    <span><span class="en">Measuring in:</span><span class="es">Medimos en:</span></span>
+    <div class="seg" role="group" aria-label="Units / Unidades" id="unitSeg">
+      <button type="button" data-unit="cm" aria-pressed="true">cm</button>
+      <button type="button" data-unit="in" aria-pressed="false">in</button>
+      <button type="button" data-unit="m" aria-pressed="false">m</button>
+    </div>
+  </div>
+  <div class="scroll">
+  <table>
+    <thead><tr>
+      <th scope="col"><span class="en">Condition</span><span class="es">Condición</span></th>
+      <th scope="col"><span class="en">Trial 1</span><span class="es">Prueba 1</span></th>
+      <th scope="col"><span class="en">Trial 2</span><span class="es">Prueba 2</span></th>
+      <th scope="col"><span class="en">Trial 3</span><span class="es">Prueba 3</span></th>
+      <th scope="col"><span class="en">Average</span><span class="es">Promedio</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><th scope="row"><span class="swatch" style="background:var(--lane-a)"></span><span class="en">Ramp only</span><span class="es">Solo rampa</span></th>
+        <td class="num"><input class="cell-input" inputmode="decimal" type="text" data-key="a1" data-trial aria-label="Ramp only, trial 1"></td>
+        <td class="num"><input class="cell-input" inputmode="decimal" type="text" data-key="a2" data-trial aria-label="Ramp only, trial 2"></td>
+        <td class="num"><input class="cell-input" inputmode="decimal" type="text" data-key="a3" data-trial aria-label="Ramp only, trial 3"></td>
+        <td class="avg" id="avgA" aria-live="polite">–</td></tr>
+      <tr><th scope="row"><span class="swatch" style="background:var(--lane-b)"></span><span class="en">Ramp + balloon</span><span class="es">Rampa + globo</span></th>
+        <td class="num"><input class="cell-input" inputmode="decimal" type="text" data-key="b1" data-trial aria-label="Ramp plus balloon, trial 1"></td>
+        <td class="num"><input class="cell-input" inputmode="decimal" type="text" data-key="b2" data-trial aria-label="Ramp plus balloon, trial 2"></td>
+        <td class="num"><input class="cell-input" inputmode="decimal" type="text" data-key="b3" data-trial aria-label="Ramp plus balloon, trial 3"></td>
+        <td class="avg" id="avgB" aria-live="polite">–</td></tr>
+      <tr><th scope="row"><span class="swatch" style="background:var(--lane-c)"></span><span class="en">Round 2: balloon + our change</span><span class="es">Ronda 2: globo + nuestro cambio</span></th>
+        <td class="num"><input class="cell-input" inputmode="decimal" type="text" data-key="c1" data-trial aria-label="Round 2, trial 1"></td>
+        <td class="num"><input class="cell-input" inputmode="decimal" type="text" data-key="c2" data-trial aria-label="Round 2, trial 2"></td>
+        <td class="num"><input class="cell-input" inputmode="decimal" type="text" data-key="c3" data-trial aria-label="Round 2, trial 3"></td>
+        <td class="avg" id="avgC" aria-live="polite">–</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="hint"><span class="en">Leave Round 2 empty until you try your change. Use numbers only, like 85 or 12.5.</span><span class="es">Deja la Ronda 2 vacía hasta probar tu cambio. Usa solo números, como 85 o 12.5.</span></p>
+</section>
+
+<section>
+  <h2><span class="en">Our graph</span><span class="es">Nuestra gráfica</span></h2>
+  <p class="hint"><span class="en">Longer bar means the car rolled farther.</span><span class="es">Una barra más larga significa que el auto llegó más lejos.</span></p>
+  <div class="track" id="track">
+    <div class="lane empty" data-lane="A"><div class="name"><span class="en">Ramp only</span><span class="es">Solo rampa</span></div><div class="road"><div class="bar a"></div><div class="val" style="left:8px">–</div></div></div>
+    <div class="lane empty" data-lane="B"><div class="name"><span class="en">Ramp + balloon</span><span class="es">Rampa + globo</span></div><div class="road"><div class="bar b"></div><div class="val" style="left:8px">–</div></div></div>
+    <div class="lane empty" data-lane="C"><div class="name"><span class="en">Round 2</span><span class="es">Ronda 2</span></div><div class="road"><div class="bar c"></div><div class="val" style="left:8px">–</div></div></div>
+  </div>
+  <div class="result" id="result" aria-live="polite"></div>
+</section>
+
+<section>
+  <h2><span class="en">Think like an engineer</span><span class="es">Piensa como ingeniero</span></h2>
+  <div class="q"><label for="q1"><span class="qn">1.</span><span class="en">Did the balloon add distance? How much? Was it the same every trial?</span><span class="es">¿El globo agregó distancia? ¿Cuánta? ¿Fue igual en cada prueba?</span></label>
+    <textarea id="q1" data-key="q1"></textarea></div>
+  <div class="q"><label for="q2"><span class="qn">2.</span><span class="en">Why was the balloon too weak on flat ground? Hint: think about friction and weight.</span><span class="es">¿Por qué el globo fue muy débil en el suelo plano? Pista: piensa en la fricción y el peso.</span></label>
+    <textarea id="q2" data-key="q2"></textarea></div>
+  <div class="q"><label for="q3"><span class="qn">3.</span><span class="en">What could make the balloon stronger or the car faster?</span><span class="es">¿Qué podría hacer el globo más fuerte o el auto más rápido?</span></label>
+    <textarea id="q3" data-key="q3"></textarea></div>
+</section>
+
+<section>
+  <h2><span class="en">Round 2: change one thing</span><span class="es">Ronda 2: cambia una sola cosa</span></h2>
+  <ul style="padding-left:22px;margin:12px 0 0">
+    <li><span class="en">Make the car lighter (less tape, lighter body).</span><span class="es">Haz el auto más ligero (menos cinta, cuerpo más liviano).</span></li>
+    <li><span class="en">Reduce friction (smooth axles, wheels that spin freely).</span><span class="es">Reduce la fricción (ejes lisos, ruedas que giran libremente).</span></li>
+    <li><span class="en">Try a wider straw or a bigger balloon.</span><span class="es">Prueba un popote más ancho o un globo más grande.</span></li>
+    <li><span class="en">Try a lower ramp and a higher ramp. Does the balloon matter more on the low one?</span><span class="es">Prueba una rampa más baja y una más alta. ¿El globo importa más en la baja?</span></li>
+  </ul>
+  <div class="q"><label for="r2change"><span class="en">Our change:</span><span class="es">Nuestro cambio:</span></label>
+    <input class="cell-input" id="r2change" type="text" data-key="r2change" style="border:2px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--surface);color:var(--ink);font:inherit"></div>
+  <div class="q"><label for="r2pred"><span class="en">Our prediction (what will happen, and why):</span><span class="es">Nuestra predicción (qué pasará y por qué):</span></label>
+    <textarea id="r2pred" data-key="r2pred"></textarea></div>
+  <div class="q"><label for="r2after"><span class="en">What actually happened?</span><span class="es">¿Qué pasó en realidad?</span></label>
+    <textarea id="r2after" data-key="r2after"></textarea></div>
+</section>
+
+<section>
+  <h2><span class="en">Challenge</span><span class="es">Reto</span></h2>
+  <div class="q"><label for="chal"><span class="en">If a real motor replaced the balloon, what would we measure?</span><span class="es">Si un motor de verdad reemplazara el globo, ¿qué mediríamos?</span></label>
+    <textarea id="chal" data-key="chal"></textarea></div>
+</section>
+
+<p class="savenote" id="saveNote"></p>
+</main>
+
+<script>
+(function () {
+  var STORE = "ramp-challenge-v1";
+  var state = {};
+  var storageOK = true;
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORE);
+      if (raw) state = JSON.parse(raw) || {};
+    } catch (e) { storageOK = false; state = {}; }
+  }
+  var saveTimer = null;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      try { localStorage.setItem(STORE, JSON.stringify(state)); }
+      catch (e) { storageOK = false; renderNote(); }
+    }, 150);
+  }
+
+  var root = document.documentElement;
+  function setLang(l) {
+    root.setAttribute("data-lang", l);
+    root.setAttribute("lang", l === "es" ? "es" : "en");
+    document.querySelectorAll("[data-set-lang]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-set-lang") === l));
+    });
+    state._lang = l; save();
+  }
+  function setUnit(u) {
+    state._unit = u;
+    document.querySelectorAll("[data-unit]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-unit") === u));
+    });
+    compute(); save();
+  }
+
+  function num(v) {
+    if (v == null) return NaN;
+    var s = String(v).trim().replace(",", ".");
+    if (s === "") return NaN;
+    var n = Number(s);
+    return isFinite(n) && n >= 0 ? n : NaN;
+  }
+  function avg(prefix) {
+    var vals = [1, 2, 3].map(function (i) { return num(state[prefix + i]); }).filter(function (n) { return !isNaN(n); });
+    if (!vals.length) return null;
+    return vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
+  }
+  function fmt(n) { return (Math.round(n * 10) / 10).toString(); }
+
+  function lang(en, es) {
+    return '<span class="en">' + en + '</span><span class="es">' + es + '</span>';
+  }
+
+  function compute() {
+    var unit = state._unit || "cm";
+    var a = avg("a"), b = avg("b"), c = avg("c");
+    var ids = { A: ["avgA", a], B: ["avgB", b], C: ["avgC", c] };
+    Object.keys(ids).forEach(function (k) {
+      document.getElementById(ids[k][0]).textContent = ids[k][1] == null ? "–" : fmt(ids[k][1]) + " " + unit;
+    });
+
+    var max = Math.max(a || 0, b || 0, c || 0);
+    document.querySelectorAll(".lane").forEach(function (lane) {
+      var v = ids[lane.getAttribute("data-lane")][1];
+      var bar = lane.querySelector(".bar"), val = lane.querySelector(".val");
+      if (v == null || max === 0) {
+        lane.classList.add("empty"); bar.style.width = "0%"; val.style.left = "8px"; val.textContent = "–";
+      } else {
+        lane.classList.remove("empty");
+        var pct = Math.max(2, (v / max) * 82);
+        bar.style.width = pct + "%";
+        val.style.left = "calc(" + pct + "% + 8px)";
+        val.textContent = fmt(v) + " " + unit;
+      }
+    });
+
+    var r = document.getElementById("result");
+    var html = "";
+    if (a != null && b != null) {
+      var d = b - a;
+      if (Math.abs(d) < 0.05) {
+        html += "<p>" + lang("The balloon made no difference.", "El globo no hizo diferencia.") + "</p>";
+      } else if (d > 0) {
+        html += "<p>" + lang("The balloon added " + fmt(d) + " " + unit + ".", "El globo agregó " + fmt(d) + " " + unit + ".") + "</p>";
+      } else {
+        html += "<p>" + lang("With the balloon the car went " + fmt(-d) + " " + unit + " less. What could cause that?", "Con el globo el auto llegó " + fmt(-d) + " " + unit + " menos. ¿Qué podría causarlo?") + "</p>";
+      }
+    } else {
+      html += '<p class="pending">' + lang("Enter trials for Ramp only and Ramp + balloon to see the difference.", "Escribe pruebas de Solo rampa y Rampa + globo para ver la diferencia.") + "</p>";
+    }
+    if (b != null && c != null) {
+      var e = c - b;
+      if (Math.abs(e) < 0.05) {
+        html += "<p>" + lang("Your Round 2 change made no difference.", "Tu cambio de la Ronda 2 no hizo diferencia.") + "</p>";
+      } else if (e > 0) {
+        html += "<p>" + lang("Your Round 2 change added another " + fmt(e) + " " + unit + ".", "Tu cambio de la Ronda 2 agregó otros " + fmt(e) + " " + unit + ".") + "</p>";
+      } else {
+        html += "<p>" + lang("Round 2 went " + fmt(-e) + " " + unit + " less than Round 1. Why might that be?", "La Ronda 2 llegó " + fmt(-e) + " " + unit + " menos que la Ronda 1. ¿Por qué será?") + "</p>";
+      }
+    }
+    r.innerHTML = html;
+  }
+
+  function renderNote() {
+    document.getElementById("saveNote").innerHTML = storageOK
+      ? lang("Your work saves automatically in this browser on this device. Use Print or save as PDF to keep a copy.", "Tu trabajo se guarda solo en este navegador de este dispositivo. Usa Imprimir o guardar PDF para tener una copia.")
+      : lang("This browser can’t save your work. Use Print or save as PDF before you close the page.", "Este navegador no puede guardar tu trabajo. Usa Imprimir o guardar PDF antes de cerrar la página.");
+  }
+
+  function restore() {
+    document.querySelectorAll("[data-key]").forEach(function (el) {
+      var k = el.getAttribute("data-key");
+      if (el.type === "checkbox") el.checked = !!state[k];
+      else if (state[k] != null) el.value = state[k];
+    });
+  }
+
+  load();
+  restore();
+
+  document.querySelectorAll("[data-key]").forEach(function (el) {
+    var ev = el.type === "checkbox" ? "change" : "input";
+    el.addEventListener(ev, function () {
+      var k = el.getAttribute("data-key");
+      state[k] = el.type === "checkbox" ? el.checked : el.value;
+      if (el.hasAttribute("data-trial")) {
+        var bad = el.value.trim() !== "" && isNaN(num(el.value));
+        el.style.borderColor = bad ? "var(--warn)" : "";
+        el.setAttribute("aria-invalid", String(bad));
+        compute();
+      }
+      save();
+    });
+  });
+
+  document.querySelectorAll("[data-set-lang]").forEach(function (b) {
+    b.addEventListener("click", function () { setLang(b.getAttribute("data-set-lang")); });
+  });
+  document.querySelectorAll("[data-unit]").forEach(function (b) {
+    b.addEventListener("click", function () { setUnit(b.getAttribute("data-unit")); });
+  });
+
+  document.getElementById("printBtn").addEventListener("click", function () {
+    document.querySelectorAll("textarea").forEach(function (t) { t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; });
+    window.print();
+  });
+
+  var resetBtn = document.getElementById("resetBtn"), resetTimer = null;
+  var resetLabel = resetBtn.innerHTML;
+  resetBtn.addEventListener("click", function () {
+    if (resetBtn.getAttribute("data-armed") !== "true") {
+      resetBtn.setAttribute("data-armed", "true");
+      resetBtn.innerHTML = lang("Tap again to erase everything", "Toca otra vez para borrar todo");
+      resetTimer = setTimeout(function () { resetBtn.setAttribute("data-armed", "false"); resetBtn.innerHTML = resetLabel; }, 4000);
+      return;
+    }
+    clearTimeout(resetTimer);
+    var keepLang = state._lang || "both";
+    state = { _lang: keepLang };
+    try { localStorage.removeItem(STORE); } catch (e) {}
+    document.querySelectorAll("[data-key]").forEach(function (el) {
+      if (el.type === "checkbox") el.checked = false; else el.value = "";
+      el.style.borderColor = ""; el.removeAttribute("aria-invalid");
+    });
+    resetBtn.setAttribute("data-armed", "false"); resetBtn.innerHTML = resetLabel;
+    setUnit("cm"); compute(); save();
+  });
+
+  setLang(state._lang || "both");
+  setUnit(state._unit || "cm");
+  renderNote();
+  compute();
+})();
+</script>
+</body>
+</html>
